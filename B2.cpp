@@ -1,151 +1,139 @@
 //============================================================================
 // Name        : ExpressionTree.cpp
-// Author      : 
+// Author      :
 // Version     :
 // Copyright   : Your copyright notice
-// Description : construct an expression tree for a prefix Expression in inorder, preorder and postorder traversals
+// Description : Construct an expression tree from the given prefix and traverse it using post order traversal and then delete the entire tree.
 //============================================================================
 
 #include <iostream>
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
+#include <string.h>
 using namespace std;
-//node declaration
-class TREE_N  {
-   public:
-   char d;
-   TREE_N *l, *r;
-   TREE_N(char d) {
-      this->d = d;
-      this->l = NULL;
-      this->r = NULL;
-   }
+
+struct node
+{
+    char data;
+    node *left;
+    node *right;
 };
-// stack declaration
-class StackNod {
-   public:
-   TREE_N *treeN;
-   StackNod *n;
-   //constructor
-   StackNod(TREE_N *treeN) {
-      this->treeN = treeN;
-      n = NULL;
-   }
+class tree
+{
+    char prefix[20];
+
+public:
+    node *top;
+    void expression(char[]);
+    void display(node *);
+    void non_rec_postorder(node *);
+    void del(node *);
 };
+class stack1
+{
+    node *data[30];
+    int top;
 
-class ExpressionTree {
-   private: StackNod *top;
-   public: ExpressionTree() {
-      top = NULL;
-   }
-   void clear() {
-      top = NULL;
-   }
-
-   void push(TREE_N *ptr) {
-      if (top == NULL)
-         top = new StackNod(ptr);
-      else {
-         StackNod *nptr = new StackNod(ptr);
-         nptr->n = top;
-         top = nptr;
-      }
-   }
-
-   TREE_N *pop() {
-      if (top == NULL) {
-         cout<<"Underflow"<<endl;
-         return 0;
-      }
-      else {
-    	  TREE_N *ptr = top->treeN;
-         top = top->n;
-         return ptr;
-      }
-   }
-
-   TREE_N *peek() {
-      return top->treeN;
-   }
-
-   void insert(char val) {
-      if (isalpha(val)) {
-    	  TREE_N *nptr = new TREE_N(val);
-         push(nptr);
-      } else if (isOperator(val)) {
-    	  TREE_N *nptr = new TREE_N(val);
-         nptr->l = pop();
-         nptr->r= pop();
-         push(nptr);
-      } else {
-         cout<<"Invalid Expression"<<endl;
-         return;
-      }
-   }
-
-  /* bool isDigit(char ch) {
-      return ch >= '0' && ch <= '9';
-   }*/
-
-   bool isOperator(char ch) {
-      return ch == '+' || ch == '-' || ch == '*' || ch == '/';
-   }
-
-   int toDigit(char ch) {
-      return ch - '0';
-   }
-
-   void buildTree(string eqn) {
-      for (int i = eqn.length() - 1; i >= 0; i--)
-         insert(eqn[i]);
-   }
-
-   void postfix() {
-      postOrder(peek());
-   }
-
-   void postOrder(TREE_N *ptr) {
-      if (ptr != NULL) {
-         postOrder(ptr->l);
-         postOrder(ptr->r);
-         cout<<ptr->d;
-      }
-   }
-   void infix() {
-      inOrder(peek());
-   }
-
-   void inOrder(TREE_N *ptr) {
-      if (ptr != NULL) {
-         inOrder(ptr->l);
-         cout<<ptr->d;
-         inOrder(ptr->r);
-      }
-   }
-   void prefix() {
-      preOrder(peek());
-   }
-
-   void preOrder(TREE_N *ptr) {
-      if (ptr != NULL) {
-         cout<<ptr->d;
-         preOrder(ptr->l);
-         preOrder(ptr->r);
-      }
-   }
+public:
+    stack1()
+    {
+        top = -1;
+    }
+    int empty()
+    {
+        if (top == -1)
+            return 1;
+        return 0;
+    }
+    void push(node *p)
+    {
+        data[++top] = p;
+    }
+    node *pop()
+    {
+        return (data[top--]);
+    }
 };
+void tree::expression(char prefix[])
+{
+    char c;
+    stack1 s;
+    node *t1, *t2;
+    int len, i;
+    len = strlen(prefix);
+    for (i = len - 1; i >= 0; i--)
+    {
+        top = new node;
+        top->left = NULL;
+        top->right = NULL;
+        if (isalpha(prefix[i]))
+        {
+            top->data = prefix[i];
+            s.push(top);
+        }
+        else if (prefix[i] == '+' || prefix[i] == '*' || prefix[i] == '-' || prefix[i] == '/')
+        {
+            t2 = s.pop();
+            t1 = s.pop();
+            top->data = prefix[i];
+            top->left = t2;
+            top->right = t1;
+            s.push(top);
+        }
+    }
+    top = s.pop();
+}
+void tree::display(node *root)
+{
+    if (root != NULL)
+    {
+        cout << root->data;
+        display(root->left);
+        display(root->right);
+    }
+}
+void tree::non_rec_postorder(node *top)
+{
+    stack1 s1, s2; /*stack s1 is being used for flag . A NULL data implies that the right subtree has not been visited */
+    node *T = top;
+    cout << "\n";
+    s1.push(T);
+    while (!s1.empty())
+    {
+        T = s1.pop();
+        s2.push(T);
+        if (T->left != NULL)
+            s1.push(T->left);
+        if (T->right != NULL)
+            s1.push(T->right);
+    }
+    while (!s2.empty())
+    {
+        top = s2.pop();
+        cout << top->data;
+    }
+}
+void tree::del(node *node)
+{
+    if (node == NULL)
+        return;
+    /* first delete both subtrees */
+    del(node->left);
+    del(node->right);
+    /* then delete the node */
+    cout <<endl<<"Deleting node : " << node->data<<endl;
+    free(node);
+}
+int main()
+{
+    char expr[20];
+    tree t;
 
-int main() {
-   string s;
-   ExpressionTree et;
-   cout<<"\nEnter equation in Prefix form: ";
-   cin>>s;
-   et.buildTree(s);
-   cout<<"\nPrefix : ";
-   et.prefix();
-   cout<<"\n\nInfix : ";
-   et.infix();
-   cout<<"\n\nPostfix : ";
-   et.postfix();
+    cout <<"Enter prefix Expression : ";
+    cin >> expr;
+    cout << expr;
+    t.expression(expr);
+    //t.display(t.top);
+    //cout<<endl;
+    t.non_rec_postorder(t.top);
+    t.del(t.top);
+    // t.display(t.top);
 }
